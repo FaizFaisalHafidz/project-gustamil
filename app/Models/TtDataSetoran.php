@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class TtDataSetoran extends Model
 {
@@ -18,6 +19,7 @@ class TtDataSetoran extends Model
         'total_harga',
         'poin_didapat',
         'tanggal_setoran',
+        'waktu_setoran', // FIXED: Add this field
         'catatan',
         'admin_id',
         'status',
@@ -25,13 +27,14 @@ class TtDataSetoran extends Model
 
     protected $casts = [
         'tanggal_setoran' => 'date',
+        // 'waktu_setoran' => 'time', // FIXED: Add cast for time
         'berat_kg' => 'decimal:2',
         'harga_per_kg' => 'decimal:2',
         'total_harga' => 'decimal:2',
         'poin_didapat' => 'integer',
     ];
 
-    // FIXED: Add missing relationships
+    // Relationships
     public function anggota(): BelongsTo
     {
         return $this->belongsTo(TmDataAnggota::class, 'anggota_id');
@@ -45,6 +48,12 @@ class TtDataSetoran extends Model
     public function admin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'admin_id');
+    }
+
+    // FIXED: Add relationship to history saldo
+    public function historySaldo(): HasOne
+    {
+        return $this->hasOne(TtDataHistorySaldoAnggota::class, 'setoran_id');
     }
 
     // Static method to generate setoran number

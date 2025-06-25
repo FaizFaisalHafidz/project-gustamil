@@ -135,7 +135,7 @@ class JenisSampahController extends Controller
             'status_aktif' => $request->status_aktif,
         ]);
 
-        return redirect()->route('jenis-sampah.show', $jenisSampah)
+        return redirect()->route('jenis-sampah.index', $jenisSampah)
             ->with('success', 'Jenis sampah berhasil diperbarui!');
     }
 

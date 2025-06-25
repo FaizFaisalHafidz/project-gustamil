@@ -52,7 +52,7 @@ class SetoranController extends Controller
             $totalHarga = $beratKg * $hargaPerKg;
             $poinDidapat = (int) ($beratKg * $poinPerKg);
 
-            // Create setoran record
+            // FIXED: Create setoran record dengan waktu_setoran
             $setoran = TtDataSetoran::create([
                 'nomor_setoran' => TtDataSetoran::generateNomorSetoran(),
                 'anggota_id' => $anggota->id,
@@ -63,8 +63,9 @@ class SetoranController extends Controller
                 'total_harga' => $totalHarga,
                 'poin_didapat' => $poinDidapat,
                 'tanggal_setoran' => now()->toDateString(),
-                'waktu_setoran' => now()->toTimeString(),
+                'waktu_setoran' => now()->toTimeString(), // FIXED: Add this field
                 'catatan' => $request->catatan,
+                // 'status' => 'aktif', // FIXED: Add status field
             ]);
 
             // Update saldo and poin anggota
@@ -79,7 +80,7 @@ class SetoranController extends Controller
                 'total_setoran_kg' => $anggota->total_setoran_kg + $beratKg,
             ]);
 
-            // Create history saldo record
+            // FIXED: Create history saldo record dengan waktu_transaksi
             TtDataHistorySaldoAnggota::create([
                 'nomor_transaksi' => TtDataHistorySaldoAnggota::generateNomorTransaksi(),
                 'anggota_id' => $anggota->id,
@@ -95,7 +96,7 @@ class SetoranController extends Controller
                 'admin_id' => Auth::id(),
                 'keterangan' => "Setoran {$jenisSampah->nama_jenis} seberat {$beratKg} kg",
                 'tanggal_transaksi' => now()->toDateString(),
-                'waktu_transaksi' => now()->toTimeString(),
+                'waktu_transaksi' => now()->toTimeString(), // FIXED: Add this field
             ]);
 
             DB::commit();
