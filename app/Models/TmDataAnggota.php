@@ -89,4 +89,28 @@ class TmDataAnggota extends Model
 
         return $prefix . $year . str_pad($newSequence, 4, '0', STR_PAD_LEFT);
     }
+
+    /**
+     * Check apakah anggota aktif dan valid
+     */
+    public function isActiveAndValid(): bool
+    {
+        return $this->status_aktif && $this->user && $this->user->hasRole('anggota');
+    }
+
+    /**
+     * Get status display text
+     */
+    public function getStatusDisplayAttribute(): string
+    {
+        return $this->status_aktif ? 'Aktif' : 'Tidak Aktif';
+    }
+
+    /**
+     * Get status color for UI
+     */
+    public function getStatusColorAttribute(): string
+    {
+        return $this->status_aktif ? 'green' : 'red';
+    }
 }

@@ -21,6 +21,10 @@ Route::middleware('guest')->group(function () {
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
+    // FIXED: Add route for account inactive page
+    Route::get('account-inactive', [AuthenticatedSessionController::class, 'accountInactive'])
+        ->name('account.inactive');
+
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
 
