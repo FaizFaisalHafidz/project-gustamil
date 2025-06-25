@@ -13,7 +13,7 @@ interface AccountInactiveProps {
     anggota?: {
         nomor_anggota: string;
         nama_lengkap: string;
-        tanggal_daftar: string;
+        // tanggal_daftar: string;
     };
 }
 
@@ -61,7 +61,7 @@ export default function AccountInactive({ user, anggota }: AccountInactiveProps)
                                 <span className="text-sm font-medium text-orange-700">No. Anggota:</span>
                                 <span className="text-sm text-orange-900">{anggota.nomor_anggota}</span>
                             </div>
-                            <div className="flex justify-between items-center">
+                            {/* <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-orange-700">Terdaftar:</span>
                                 <span className="text-sm text-orange-900">
                                     {new Date(anggota.tanggal_daftar).toLocaleDateString('id-ID', {
@@ -70,7 +70,7 @@ export default function AccountInactive({ user, anggota }: AccountInactiveProps)
                                         year: 'numeric'
                                     })}
                                 </span>
-                            </div>
+                            </div> */}
                         </>
                     )}
                     <div className="pt-2 border-t border-orange-200">

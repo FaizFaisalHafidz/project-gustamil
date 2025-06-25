@@ -93,7 +93,7 @@ class AuthenticatedSessionController extends Controller
             'anggota' => $anggota ? [
                 'nomor_anggota' => $anggota->nomor_anggota,
                 'nama_lengkap' => $anggota->nama_lengkap,
-                'tanggal_daftar' => $anggota->tanggal_daftar->toDateString(),
+                // 'tanggal_daftar' => $anggota->tanggal_daftar->toDateString(),
             ] : null,
         ]);
     }
