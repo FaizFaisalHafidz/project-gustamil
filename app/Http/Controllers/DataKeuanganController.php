@@ -67,16 +67,14 @@ class DataKeuanganController extends Controller
      */
     public function store(Request $request)
     {
-        \Log::info('DataKeuangan Store Request:', $request->all());
 
         $request->validate([
             'jenis_transaksi' => 'required|in:masuk,keluar',
-            'kategori_transaksi' => 'required|in:penjualan_pengepul,keperluan_operasional,penarikan_anggota',
+            'kategori_transaksi' => 'required|in:penjualan_pengepul,keperluan_operasional',
             'jumlah_uang' => 'required|numeric|min:1000|max:100000000',
-            'anggota_id' => 'nullable|exists:tm_data_anggota,id',
             'keterangan' => 'required|string|max:255',
         ], [
-            'kategori_transaksi.in' => 'Kategori transaksi harus dipilih dari: Penjualan Pengepul, Keperluan Operasional, atau Penarikan Anggota',
+            'kategori_transaksi.in' => 'Kategori transaksi harus dipilih dari: Penjualan Pengepul atau Keperluan Operasional',
             'jumlah_uang.min' => 'Minimal jumlah adalah Rp 1.000',
             'jumlah_uang.max' => 'Maksimal jumlah adalah Rp 100.000.000',
             'jenis_transaksi.required' => 'Jenis transaksi harus dipilih',
@@ -87,81 +85,25 @@ class DataKeuanganController extends Controller
         try {
             DB::beginTransaction();
 
-            \Log::info('Creating TtDataKeuangan with data:', [
-                'nomor_transaksi' => TtDataKeuangan::generateNomorTransaksi(),
-                'jenis_transaksi' => $request->jenis_transaksi,
-                'kategori_transaksi' => $request->kategori_transaksi,
-                'jumlah_uang' => $request->jumlah_uang,
-                'anggota_id' => $request->anggota_id,
-                'admin_id' => Auth::id(),
-                'keterangan' => $request->keterangan,
-            ]);
-
             // Create data keuangan record
             $dataKeuangan = TtDataKeuangan::create([
                 'nomor_transaksi' => TtDataKeuangan::generateNomorTransaksi(),
                 'jenis_transaksi' => $request->jenis_transaksi,
                 'kategori_transaksi' => $request->kategori_transaksi,
                 'jumlah_uang' => $request->jumlah_uang,
-                'anggota_id' => $request->anggota_id,
+                'anggota_id' => null, // Tidak ada anggota terkait untuk transaksi keuangan biasa
                 'admin_id' => Auth::id(),
                 'keterangan' => $request->keterangan,
                 'tanggal_transaksi' => now()->toDateString(),
                 'waktu_transaksi' => now()->toTimeString(),
             ]);
 
-            \Log::info('TtDataKeuangan created successfully:', $dataKeuangan->toArray());
-
-            // If this affects member's balance (only for keperluan_operasional with anggota)
-            if ($request->anggota_id && $request->kategori_transaksi === 'keperluan_operasional') {
-                $anggota = TmDataAnggota::findOrFail($request->anggota_id);
-                
-                $saldoSebelum = $anggota->saldo_aktif;
-                $jumlahSaldo = $request->jenis_transaksi === 'masuk' 
-                    ? $request->jumlah_uang 
-                    : -$request->jumlah_uang;
-                $saldoSesudah = $saldoSebelum + $jumlahSaldo;
-
-                // Update anggota saldo
-                $anggota->update([
-                    'saldo_aktif' => $saldoSesudah,
-                ]);
-
-                // Create history saldo
-                TtDataHistorySaldoAnggota::create([
-                    'nomor_transaksi' => TtDataHistorySaldoAnggota::generateNomorTransaksi(),
-                    'anggota_id' => $anggota->id,
-                    'jenis_transaksi' => $request->jenis_transaksi,
-                    'kategori_transaksi' => $request->kategori_transaksi,
-                    'jumlah_saldo' => $request->jumlah_uang,
-                    'jumlah_poin' => 0,
-                    'saldo_sebelum' => $saldoSebelum,
-                    'saldo_sesudah' => $saldoSesudah,
-                    'poin_sebelum' => $anggota->total_poin,
-                    'poin_sesudah' => $anggota->total_poin,
-                    'setoran_id' => null,
-                    'keuangan_id' => $dataKeuangan->id,
-                    'admin_id' => Auth::id(),
-                    'keterangan' => $request->keterangan,
-                    'tanggal_transaksi' => now()->toDateString(),
-                    'waktu_transaksi' => now()->toTimeString(),
-                ]);
-
-                \Log::info('History saldo created for anggota:', $anggota->id);
-            }
-
             DB::commit();
-
-            \Log::info('Transaction committed successfully');
 
             return redirect()->back()->with('success', 'Data transaksi keuangan berhasil ditambahkan!');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error in DataKeuangan store:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             
             return redirect()->back()->withErrors([
                 'error' => 'Gagal menambahkan transaksi: ' . $e->getMessage()
@@ -184,12 +126,11 @@ class DataKeuanganController extends Controller
 
         $request->validate([
             'jenis_transaksi' => 'required|in:masuk,keluar',
-            'kategori_transaksi' => 'required|in:penjualan_pengepul,keperluan_operasional,penarikan_anggota',
+            'kategori_transaksi' => 'required|in:penjualan_pengepul,keperluan_operasional',
             'jumlah_uang' => 'required|numeric|min:1000|max:100000000',
-            'anggota_id' => 'nullable|exists:tm_data_anggota,id',
             'keterangan' => 'required|string|max:255',
         ], [
-            'kategori_transaksi.in' => 'Kategori transaksi harus dipilih dari: Penjualan Pengepul, Keperluan Operasional, atau Penarikan Anggota',
+            'kategori_transaksi.in' => 'Kategori transaksi harus dipilih dari: Penjualan Pengepul atau Keperluan Operasional',
             'jumlah_uang.min' => 'Minimal jumlah adalah Rp 1.000',
             'jumlah_uang.max' => 'Maksimal jumlah adalah Rp 100.000.000',
         ]);
@@ -200,41 +141,14 @@ class DataKeuanganController extends Controller
             $jumlahLama = $keuangan->jumlah_uang;
             $jenisLama = $keuangan->jenis_transaksi;
             
-            // Update data keuangan
+            // Update data keuangan - simplified without anggota logic
             $keuangan->update([
                 'jenis_transaksi' => $request->jenis_transaksi,
                 'kategori_transaksi' => $request->kategori_transaksi,
                 'jumlah_uang' => $request->jumlah_uang,
-                'anggota_id' => $request->anggota_id,
+                'anggota_id' => null, // Set to null since we removed anggota logic
                 'keterangan' => $request->keterangan,
             ]);
-
-            // Update related history saldo if exists
-            if ($keuangan->historySaldo) {
-                $historyBalance = $keuangan->historySaldo;
-                $anggota = $historyBalance->anggota;
-                
-                // Reverse old transaction
-                $oldAmount = $jenisLama === 'masuk' ? $jumlahLama : -$jumlahLama;
-                $newAmount = $request->jenis_transaksi === 'masuk' ? $request->jumlah_uang : -$request->jumlah_uang;
-                $difference = $newAmount - $oldAmount;
-                
-                $saldoBaru = $anggota->saldo_aktif + $difference;
-                
-                // Update anggota saldo
-                $anggota->update([
-                    'saldo_aktif' => $saldoBaru,
-                ]);
-
-                // Update history record
-                $historyBalance->update([
-                    'jenis_transaksi' => $request->jenis_transaksi,
-                    'kategori_transaksi' => $request->kategori_transaksi,
-                    'jumlah_saldo' => $request->jumlah_uang,
-                    'saldo_sesudah' => $saldoBaru,
-                    'keterangan' => $request->keterangan . ' (diperbarui)',
-                ]);
-            }
 
             DB::commit();
 

@@ -1,27 +1,26 @@
 import { useForm } from "@inertiajs/react"
-import axios from "axios"
-import { AlertCircle, DollarSign, User } from "lucide-react"
-import { FormEventHandler, useEffect, useState } from "react"
+import { AlertCircle, DollarSign } from "lucide-react"
+import { FormEventHandler, useEffect } from "react"
 import { toast } from "sonner"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
@@ -37,7 +36,6 @@ interface Keuangan {
   jenis_transaksi: 'masuk' | 'keluar'
   kategori_transaksi: string
   jumlah_uang: number
-  anggota_id: number | null
   keterangan: string
 }
 
@@ -47,55 +45,26 @@ interface KeuanganFormProps {
 }
 
 export default function KeuanganForm({ keuangan, onSuccess }: KeuanganFormProps) {
-  const [anggotaList, setAnggotaList] = useState<Anggota[]>([])
-  const [isLoadingAnggota, setIsLoadingAnggota] = useState(false)
-  const [selectedAnggota, setSelectedAnggota] = useState<Anggota | null>(null)
-
   const { data, setData, post, put, processing, errors, reset } = useForm({
     jenis_transaksi: keuangan?.jenis_transaksi || 'masuk',
     kategori_transaksi: keuangan?.kategori_transaksi || '',
     jumlah_uang: keuangan?.jumlah_uang || 0,
-    anggota_id: keuangan?.anggota_id || null,
     keterangan: keuangan?.keterangan || '',
   })
 
   const isEditing = Boolean(keuangan)
 
-  // Load anggota list
+  // Re-initialize form data when keuangan prop changes (for editing)
   useEffect(() => {
-    const loadAnggota = async () => {
-      setIsLoadingAnggota(true)
-      try {
-        const response = await axios.get('/data-anggota/api/aktif')
-        setAnggotaList(response.data)
-      } catch (error) {
-        toast.error('Gagal memuat data anggota')
-      } finally {
-        setIsLoadingAnggota(false)
-      }
+    if (keuangan) {
+      setData({
+        jenis_transaksi: keuangan.jenis_transaksi,
+        kategori_transaksi: keuangan.kategori_transaksi,
+        jumlah_uang: keuangan.jumlah_uang,
+        keterangan: keuangan.keterangan,
+      })
     }
-
-    loadAnggota()
-  }, [])
-
-  // Set selected anggota on edit
-  useEffect(() => {
-    if (keuangan?.anggota_id && anggotaList.length > 0) {
-      const anggota = anggotaList.find(a => a.id === keuangan.anggota_id)
-      setSelectedAnggota(anggota || null)
-    }
-  }, [keuangan, anggotaList])
-
-  const handleAnggotaChange = (anggotaId: string) => {
-    if (anggotaId === 'none') {
-      setData('anggota_id', null)
-      setSelectedAnggota(null)
-    } else {
-      const anggota = anggotaList.find(a => a.id.toString() === anggotaId)
-      setData('anggota_id', parseInt(anggotaId))
-      setSelectedAnggota(anggota || null)
-    }
-  }
+  }, [keuangan, setData])
 
   const submit: FormEventHandler = (e) => {
     e.preventDefault()
@@ -105,11 +74,10 @@ export default function KeuanganForm({ keuangan, onSuccess }: KeuanganFormProps)
       jenis_transaksi: data.jenis_transaksi,
       kategori_transaksi: data.kategori_transaksi,
       jumlah_uang: data.jumlah_uang,
-      anggota_id: data.anggota_id,
       keterangan: data.keterangan,
     }
 
-    if (isEditing) {
+    if (isEditing && keuangan) {
       put(`/data-keuangan/${keuangan.id}`, {
         onSuccess: () => {
           toast.success('Transaksi berhasil diperbarui!')
@@ -129,7 +97,6 @@ export default function KeuanganForm({ keuangan, onSuccess }: KeuanganFormProps)
         onSuccess: () => {
           toast.success('Transaksi berhasil ditambahkan!')
           reset()
-          setSelectedAnggota(null)
           onSuccess?.()
         },
         onError: (errors) => {
@@ -155,11 +122,7 @@ export default function KeuanganForm({ keuangan, onSuccess }: KeuanganFormProps)
   const kategoriOptions = [
     { value: 'penjualan_pengepul', label: 'Penjualan Pengepul' },
     { value: 'keperluan_operasional', label: 'Keperluan Operasional' },
-    { value: 'penarikan_anggota', label: 'Penarikan Anggota' },
   ]
-
-  const saldoAffectingCategories = ['keperluan_operasional'] // Only keperluan_operasional affects saldo
-  const affectsSaldo = data.anggota_id && saldoAffectingCategories.includes(data.kategori_transaksi)
 
   return (
     <DialogContent className="sm:max-w-[600px]">
@@ -247,56 +210,8 @@ export default function KeuanganForm({ keuangan, onSuccess }: KeuanganFormProps)
             )}
           </div>
 
-          {/* Anggota */}
-          <div className="grid gap-2">
-            <Label htmlFor="anggota_id">Anggota</Label>
-            <Select 
-              value={data.anggota_id?.toString() || 'none'}
-              onValueChange={handleAnggotaChange}
-              disabled={isLoadingAnggota}
-            >
-              <SelectTrigger className={errors.anggota_id ? 'border-red-500' : ''}>
-                <SelectValue placeholder={isLoadingAnggota ? "Memuat..." : "Pilih anggota (opsional)"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Tidak ada anggota terkait</SelectItem>
-                {anggotaList.map((anggota) => (
-                  <SelectItem key={anggota.id} value={anggota.id.toString()}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{anggota.nama_lengkap}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {anggota.nomor_anggota} • Saldo: {formatCurrency(anggota.saldo_aktif)}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.anggota_id && (
-              <p className="text-sm text-red-500">{errors.anggota_id}</p>
-            )}
-          </div>
-
-          {/* Saldo Preview */}
-          {affectsSaldo && selectedAnggota && (
-            <Alert className="border-blue-200 bg-blue-50">
-              <User className="h-4 w-4 text-blue-600" />
-              <AlertDescription>
-                <div className="font-medium text-blue-900">Dampak pada Saldo Anggota:</div>
-                <div className="text-sm text-blue-800 mt-1">
-                  <div>Anggota: {selectedAnggota.nama_lengkap}</div>
-                  <div>Saldo Saat Ini: {formatCurrency(selectedAnggota.saldo_aktif)}</div>
-                  <div>
-                    Saldo Setelah Transaksi: {formatCurrency(
-                      selectedAnggota.saldo_aktif + (
-                        data.jenis_transaksi === 'masuk' ? data.jumlah_uang : -data.jumlah_uang
-                      )
-                    )}
-                  </div>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
+          {/* Anggota - HIDDEN: Hanya keluar masuk uang saja */}
+          <input type="hidden" name="anggota_id" value="" />
 
           {/* Keterangan */}
           <div className="grid gap-2">
@@ -320,8 +235,8 @@ export default function KeuanganForm({ keuangan, onSuccess }: KeuanganFormProps)
           <Alert className="border-orange-200 bg-orange-50">
             <AlertCircle className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-orange-800">
-              <strong>Perhatian:</strong> Transaksi dengan kategori "Keperluan Operasional" 
-              akan mempengaruhi saldo anggota yang dipilih.
+              <strong>Informasi:</strong> Transaksi ini hanya mencatat keluar masuk uang 
+              dan tidak mempengaruhi saldo anggota.
             </AlertDescription>
           </Alert>
         </div>

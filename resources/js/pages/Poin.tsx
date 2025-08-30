@@ -16,7 +16,6 @@ import {
     Gift,
     History,
     Home,
-    Info,
     Recycle,
     Star,
     TrendingDown,
@@ -107,7 +106,7 @@ export default function Poin({ anggota, pointConfig, exchangeData, pointHistory,
     const toast = useToast();
 
     const calculateExchangeValue = (points: number) => {
-        if (points < pointConfig.minimum || points % pointConfig.rate !== 0) {
+        if (points <= 0 || points % pointConfig.rate !== 0) {
             return 0;
         }
         return (points / pointConfig.rate) * pointConfig.value;
@@ -116,10 +115,10 @@ export default function Poin({ anggota, pointConfig, exchangeData, pointHistory,
     const handleExchange = () => {
         const points = parseInt(pointsToExchange);
         
-        if (!points || points < pointConfig.minimum) {
+        if (!points || points <= 0) {
             toast.showWarning(
-                'Poin Tidak Mencukupi',
-                `Minimum ${formatNumber(pointConfig.minimum)} poin`
+                'Poin Tidak Valid',
+                'Masukkan jumlah poin yang valid'
             );
             return;
         }
@@ -177,16 +176,19 @@ export default function Poin({ anggota, pointConfig, exchangeData, pointHistory,
     // Handle flash messages dari server (update juga untuk lebih compact)
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('success')) {
-            toast.showSuccess('Berhasil!', urlParams.get('success'));
+        const success = urlParams.get('success');
+        const error = urlParams.get('error');
+        
+        if (success) {
+            toast.showSuccess('Berhasil!', success);
         }
-        if (urlParams.get('error')) {
-            toast.showError('Gagal!', urlParams.get('error'));
+        if (error) {
+            toast.showError('Gagal!', error);
         }
     }, []);
 
     const suggestedAmounts = [
-        pointConfig.minimum,
+        pointConfig.rate,
         pointConfig.rate * 10,
         pointConfig.rate * 20,
         pointConfig.rate * 50
@@ -269,27 +271,8 @@ export default function Poin({ anggota, pointConfig, exchangeData, pointHistory,
                     </CardContent>
                 </Card>
 
-                {/* Exchange Rate Info */}
-                <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 mb-6">
-                    <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <Info className="h-5 w-5 text-blue-600" />
-                                <div>
-                                    <p className="font-medium text-blue-900">Kurs Penukaran</p>
-                                    <p className="text-sm text-blue-700">{exchangeData.rate_text}</p>
-                                </div>
-                            </div>
-                            <div className="text-center">
-                                <ArrowRightLeft className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-                                <p className="text-xs text-blue-600">Tukar Sekarang</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
                 {/* Exchange Form */}
-                {exchangeData.can_exchange ? (
+                {anggota.total_poin >= pointConfig.rate ? (
                     <Card className="bg-white shadow-lg border-0 mb-6">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-lg flex items-center">
@@ -297,7 +280,7 @@ export default function Poin({ anggota, pointConfig, exchangeData, pointHistory,
                                 Tukar Poin ke Saldo
                             </CardTitle>
                             <CardDescription>
-                                Minimum {formatNumber(pointConfig.minimum)} poin, kelipatan {pointConfig.rate}
+                                Kelola poin Anda dengan mudah
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -307,10 +290,10 @@ export default function Poin({ anggota, pointConfig, exchangeData, pointHistory,
                                 <Input
                                     id="points"
                                     type="number"
-                                    placeholder={`Minimum ${pointConfig.minimum} poin`}
+                                    placeholder={`Kelipatan ${pointConfig.rate} poin`}
                                     value={pointsToExchange}
                                     onChange={(e) => setPointsToExchange(e.target.value)}
-                                    min={pointConfig.minimum}
+                                    min={pointConfig.rate}
                                     max={anggota.total_poin}
                                     step={pointConfig.rate}
                                 />
@@ -361,7 +344,7 @@ export default function Poin({ anggota, pointConfig, exchangeData, pointHistory,
                             <Gift className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                             <h3 className="font-medium text-gray-600 mb-2">Poin Belum Mencukupi</h3>
                             <p className="text-sm text-gray-500">
-                                Kumpulkan minimal {formatNumber(pointConfig.minimum)} poin untuk mulai menukar
+                                Kumpulkan minimal {formatNumber(pointConfig.rate)} poin untuk mulai menukar
                             </p>
                         </CardContent>
                     </Card>

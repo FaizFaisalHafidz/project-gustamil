@@ -9,7 +9,6 @@ import {
     Package,
     Phone,
     Plus,
-    RotateCcw,
     Trash2,
     TrendingDown,
     TrendingUp,
@@ -27,7 +26,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
     Table,
     TableBody,
@@ -160,25 +159,6 @@ export default function Show({ anggota, setoran, historySaldo, summary }: ShowPr
   }, [])
 
   // Actions
-  const resetPassword = React.useCallback(() => {
-    router.post(`/data-anggota/${anggota.id}/reset-password`, {}, {
-      onSuccess: (page) => {
-        const password = page.props.flash?.password
-        if (password) {
-          toast.success(`Password berhasil direset!`, {
-            description: `Password baru: ${password}`,
-            duration: 10000,
-          })
-        } else {
-          toast.success('Password berhasil direset!')
-        }
-      },
-      onError: () => {
-        toast.error('Gagal reset password!')
-      }
-    })
-  }, [anggota.id])
-
   const toggleStatus = React.useCallback(() => {
     router.post(`/data-anggota/${anggota.id}/toggle-status`, {}, {
       onSuccess: () => {
@@ -203,11 +183,6 @@ export default function Show({ anggota, setoran, historySaldo, summary }: ShowPr
       })
     }
   }, [anggota.id])
-
-  const editSetoran = React.useCallback((setoranId: number) => {
-    // TODO: Implement edit setoran modal
-    toast.info('Fitur edit setoran akan segera tersedia')
-  }, [])
 
   const deleteSetoran = React.useCallback((setoranId: number) => {
     if (confirm('Apakah Anda yakin ingin menghapus data setoran ini?')) {
@@ -365,9 +340,11 @@ export default function Show({ anggota, setoran, historySaldo, summary }: ShowPr
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2 pt-4 border-t">
-              <Button variant="outline" size="sm" onClick={resetPassword}>
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Reset Password
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/data-anggota/${anggota.id}/edit`}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Anggota
+                </Link>
               </Button>
               <Button 
                 variant="outline" 
@@ -546,11 +523,6 @@ export default function Show({ anggota, setoran, historySaldo, summary }: ShowPr
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => editSetoran(item.id)}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
                                   <DropdownMenuItem 
                                     onClick={() => deleteSetoran(item.id)}
                                     className="text-red-600"

@@ -62,7 +62,7 @@ class PoinController extends Controller
                 'points_to_exchange' => [
                     'required',
                     'integer',
-                    'min:' . config('app.point_exchange.minimum'),
+                    'min:' . config('app.point_exchange.rate'),
                     function ($attribute, $value, $fail) {
                         Log::info("Validating points: {$value}");
                         Log::info("Exchange rate: " . config('app.point_exchange.rate'));
@@ -221,7 +221,7 @@ class PoinController extends Controller
             'exchangeable_points' => $maxExchangeablePoints,
             'max_exchange_value' => $maxExchangeValue,
             'rate_text' => "{$pointConfig['rate']} poin = Rp " . number_format($pointConfig['value'], 0, ',', '.'),
-            'can_exchange' => $totalPoin >= $pointConfig['minimum'],
+            'can_exchange' => $totalPoin >= $pointConfig['rate'],
         ];
     }
 

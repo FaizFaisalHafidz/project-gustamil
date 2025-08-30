@@ -1,7 +1,6 @@
 import { Head, Link, router, useForm } from "@inertiajs/react"
 import {
     Calendar,
-    Download,
     Edit,
     Eye,
     Filter,
@@ -25,13 +24,6 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import {
     Table,
     TableBody,
@@ -211,17 +203,6 @@ export default function Index({ keuangan, summary, filters }: IndexProps) {
     }
   }, [])
 
-  const exportData = React.useCallback(() => {
-    router.get('/data-keuangan/export/data', filters, {
-      onSuccess: () => {
-        toast.success('Data berhasil diexport!')
-      },
-      onError: () => {
-        toast.error('Gagal export data!')
-      }
-    })
-  }, [filters])
-
   const hasActiveFilters = Object.values(filters).some(value => value)
 
   return (
@@ -238,15 +219,6 @@ export default function Index({ keuangan, summary, filters }: IndexProps) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={exportData}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-blue-500"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
             <Dialog open={showKeuanganModal} onOpenChange={setShowKeuanganModal}>
               <DialogTrigger asChild>
                 <Button 
@@ -377,37 +349,30 @@ export default function Index({ keuangan, summary, filters }: IndexProps) {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
                   <Label htmlFor="jenis_transaksi">Jenis Transaksi</Label>
-                  <Select
+                  <select
+                    id="jenis_transaksi"
                     value={filterForm.data.jenis_transaksi}
-                    onValueChange={(value) => filterForm.setData('jenis_transaksi', value)}
+                    onChange={(e) => filterForm.setData('jenis_transaksi', e.target.value)}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih jenis" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Semua</SelectItem>
-                      <SelectItem value="masuk">Masuk</SelectItem>
-                      <SelectItem value="keluar">Keluar</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="">Semua</option>
+                    <option value="masuk">Masuk</option>
+                    <option value="keluar">Keluar</option>
+                  </select>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="kategori_transaksi">Kategori</Label>
-                  <Select
+                  <select
+                    id="kategori_transaksi"
                     value={filterForm.data.kategori_transaksi}
-                    onValueChange={(value) => filterForm.setData('kategori_transaksi', value)}
+                    onChange={(e) => filterForm.setData('kategori_transaksi', e.target.value)}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih kategori" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Semua</SelectItem>
-                      <SelectItem value="penjualan_pengepul">Penjualan Pengepul</SelectItem>
-                      <SelectItem value="keperluan_operasional">Keperluan Operasional</SelectItem>
-                      <SelectItem value="penarikan_anggota">Penarikan Anggota</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="">Semua</option>
+                    <option value="penjualan_pengepul">Penjualan Pengepul</option>
+                    <option value="keperluan_operasional">Keperluan Operasional</option>
+                  </select>
                 </div>
                 
                 <div className="space-y-2">
